@@ -3,7 +3,7 @@ import Navigation from './components/Navigation/Navigation';
 import Logo from './components/Logo/Logo';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import FaceRecognition from './components/FaceRecognition/FaceRecognition.js';
-import SignIn from './components/SignIn/SignIn'
+import Signin from './components/Signin/Signin'
 import Rank from './components/Rank/Rank';
 import Particles from 'react-particles-js';
 import Register from './components/Register/Register';
@@ -28,16 +28,32 @@ const particlesOptions = {
 }
 class App extends Component{
 
-  constructor(){
+  constructor(){ 
     super();
     this.state={
       input:'',
       imageUrl:'',
       box:{},
       route:'signin',
-      isSignedIn: false
+      isSignedIn: false,
+      user: {
+        id: '',
+        name: '',
+        email: '',
+        entries: 0,
+        joined: ''
+      }
     }
 
+  }
+  loadUser = (data) => {
+    this.setState({user: {
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      entries: data.entries,
+      joined: data.joined
+    }})
   }
   calculateFaceLocation = (data) => {
     const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
@@ -80,18 +96,20 @@ class App extends Component{
     this.setState({route: route});
   }
 
-  render(){
-    
+  render() {
     const { isSignedIn, imageUrl, route, box } = this.state;
-    return(
+    return (
       <div className="App">
-        <Particles className='particles' params={particlesOptions}/>
-        <Navigation onRouteChange={this.onRouteChange}/>
+         <Particles className='particles'
+          params={particlesOptions}
+        />
         <Navigation isSignedIn={isSignedIn} onRouteChange={this.onRouteChange} />
         { route === 'home'
           ? <div>
               <Logo />
               <Rank
+                // name={this.state.user.name}
+                // entries={this.state.user.entries}
               />
               <ImageLinkForm
                 onInputChange={this.onInputChange}
@@ -101,14 +119,12 @@ class App extends Component{
             </div>
           : (
              route === 'signin'
-             ? <SignIn loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
+             ? <Signin loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
              : <Register loadUser={this.loadUser} onRouteChange={this.onRouteChange}/>
             )
         }
       </div>
-
-    )
+    );
   }
-
 }
 export default App;
