@@ -1,8 +1,11 @@
 const express = require('express');
 var bodyParser = require('body-parser');
 const bcrypt=require('bcrypt-nodejs');
+const cors = require('cors');
 const app = express();
+
 app.use(bodyParser.json());
+app.use(cors())
 const database = {
     users: [
         {
@@ -12,7 +15,7 @@ const database = {
             password:'cookies',
             entries:0,
             joined: new Date()
-
+ 
         },
         {
             id:'1234',
@@ -28,7 +31,7 @@ const database = {
 }
 
 app.get('/',(req,res)=>{
-    res.send('this is working')
+    res.send(database.users);
 })
 
 app.post('/signin',(req,res)=>{
