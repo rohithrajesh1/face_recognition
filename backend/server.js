@@ -68,8 +68,8 @@ app.post('/register',(req,res)=>{
         .into('login')
         .returning('email')
         .then(loginEmail =>{
-            return knex('users').returning('*').insert({
-                email:loginEmail,
+            return trx('users').returning('*').insert({
+                email:loginEmail[0],
                 name:name,
                 joined: new Date()
             }).then(user=>{
@@ -77,7 +77,8 @@ app.post('/register',(req,res)=>{
         })
     })
 
-    
+    .then(trx.commit)
+    .catch(trx.rollback)
     }).catch(err=>res.status(400).json('unable to register'))
 })
 
