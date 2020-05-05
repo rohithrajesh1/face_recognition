@@ -3,6 +3,19 @@ var bodyParser = require('body-parser');
 const bcrypt=require('bcrypt-nodejs');
 const cors = require('cors');
 const app = express();
+var knex = require('knex')({
+    client: 'pg',
+    connection: {
+      host : '127.0.0.1',
+      user : 'postgres',
+      password : '1077',
+      database : 'smart_brain'
+    }
+  });
+
+// knex.select('*').from('users').then(data=>{
+//     console.log(data);
+// });
 
 app.use(bodyParser.json());
 app.use(cors())
@@ -46,49 +59,56 @@ app.post('/signin',(req,res)=>{
 
 app.post('/register',(req,res)=>{
     const {email, name ,password}=req.body;
-    bcrypt.hash(password, null, null, function(err, hash) {
-        console.log(hash);
-    });
-    database.users.push({
-        id:'125',
-        name:name,
-        email:email,
-        password:password,
-        entries:0,
-        joined: new Date()
-
+    const hash = bcrypt.hashSync(password);
+    knex.transaction(trx =>{
+        trx.insert({
+            hash:hash,
+            email:email
+        })
+        .into('login')
+        .returning('email')
+        .then(loginEmail =>{
+            return knex('users').returning('*').insert({
+                email:loginEmail,
+                name:name,
+                joined: new Date()
+            }).then(user=>{
+                res.json(user[0])
+        })
     })
-    res.json(database.users[database.users.length-1])
+
+    
+    }).catch(err=>res.status(400).json('unable to register'))
 })
 
 app.get('/profile/:id',(req,res)=>{
     const { id }=req.params ;
-    let found=false;
-    database.users.forEach(user=>{
-        if(user.id===id){
-            found=true;
-            return res.json(user);
-        }
-    })
-    if(!found){
-        res.status(404).json('user not found')
-    }
+    knex.select('*').from('users').where({
+        id:id
+    }).then(user=>{
+        if (user.length) {
+            res.json(user[0])
+          } else {
+            res.status(400).json('Not found')
+          }
+
+    })    .catch(err => res.status(400).json('error getting user'))
+
+
 
 })
 
-app.post('/image',(req,res)=>{
+app.put('/image',(req,res)=>{
     const { id }=req.body ;
     let found=false;
-    database.users.forEach(user=>{
-        if(user.id===id){
-            found=true;
-            user.entries++;
-            return res.json(user.entries);
-        }
+    knex('users')
+    .where('id', '=', id)
+    .increment('entries',1)
+    .returning('entries')
+    .then(entries=>{
+        res.json(entries)
     })
-    if(!found){
-        res.status(404).json('user not found')
-    }
+    .catch(err=>res.status(400).json('unable to get count'))
 
 })
 
