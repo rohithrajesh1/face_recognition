@@ -2,14 +2,16 @@ const express = require('express');
 var bodyParser = require('body-parser');
 const bcrypt=require('bcrypt-nodejs');
 const cors = require('cors');
+
 const app = express();
+
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = 0; 
+
 var knex = require('knex')({
     client: 'pg',
     connection: {
-      host : '127.0.0.1',
-      user : 'postgres',
-      password : '1077',
-      database : 'smart_brain'
+      connectionString : process.env.DATABASE_URL,
+      ssl:true
     }
   });
 
@@ -21,7 +23,7 @@ app.use(bodyParser.json());
 app.use(cors())
 
 app.get('/',(req,res)=>{
-    res.send(database.users);
+    res.send('it is working!')
 })
 
 app.post('/signin',(req,res)=>{
@@ -49,6 +51,9 @@ app.post('/signin',(req,res)=>{
 
 app.post('/register',(req,res)=>{
     const {email, name ,password}=req.body;
+    if(!email||!name||!password){
+       return res.status(400).json('incorrect form submission')
+    }
     const hash = bcrypt.hashSync(password);
     knex.transaction(trx =>{
         trx.insert({
@@ -69,7 +74,7 @@ app.post('/register',(req,res)=>{
 
     .then(trx.commit)
     .catch(trx.rollback)
-    }).catch(err=>res.status(400).json('unable to register'))
+    }).catch(err=>res.status(400).json('unable to register !!'))
 })
 
 app.get('/profile/:id',(req,res)=>{
@@ -112,6 +117,6 @@ app.put('/image',(req,res)=>{
 // bcrypt.compare("veggies", hash, function(err, res) {
 //     // res = false
 // });
-app.listen(3000,()=>{
-    console.log('app is running at port 3000');
+app.listen(process.env.PORT || 3000,()=>{
+    console.log(`app is running at port ${process.env.PORT}`);
 })
