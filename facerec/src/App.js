@@ -9,7 +9,7 @@ import Particles from 'react-particles-js';
 import Register from './components/Register/Register';
 import Clarifai from 'clarifai';
 import './App.css';
-import 'tachyons';
+import 'tachyons'; 
 
 const app = new Clarifai.App({
   apiKey: 'cd91cbd826ab44629e0600d6a78a3f2f'
@@ -26,12 +26,8 @@ const particlesOptions = {
     }
   }
 }
-class App extends Component{
-
-  constructor(){ 
-    super();
-    this.state={
-      input:'',
+const initialState={
+  input:'',
       imageUrl:'',
       box:{},
       route:'signin',
@@ -43,7 +39,12 @@ class App extends Component{
         entries: 0,
         joined: ''
       }
-    }
+}
+class App extends Component{
+
+  constructor(){ 
+    super();
+    this.state=initialState;
 
   }
   loadUser = (data) => {
@@ -82,7 +83,7 @@ class App extends Component{
     app.models.predict(Clarifai.FACE_DETECT_MODEL,this.state.input).then(
     response =>  {
       if (response) {
-        fetch('http://localhost:3000/image', {
+        fetch('https://safe-shelf-98042.herokuapp.com/image', {
           method: 'put',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
@@ -104,7 +105,7 @@ class App extends Component{
 
   onRouteChange = (route) => {
     if (route === 'signout') {
-      this.setState({isSignedIn: false})
+      this.setState(initialState)
     } else if (route === 'home') {
       this.setState({isSignedIn: true})
     }
